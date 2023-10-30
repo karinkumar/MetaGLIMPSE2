@@ -42,6 +42,8 @@ def forward_prob(Hidden, T, observations, emission_prob, a, sampleID, df, dist):
                 sum_prev = sum(f_prev[names_]*a(names_,names, dist,t) for s_, names_ in enumerate(Hidden))
 
             f_curr[names] = sum_prev*b
+            #if f_curr[names] < 0: 
+             #   raise ValueError("fwd prob is negative at", t, "emission_prob", b, "sum_prev", sum_prev, "state", names)
             
         #check for underflow issues
         #print(f_curr[list(f_curr.keys())[0]])
@@ -49,6 +51,7 @@ def forward_prob(Hidden, T, observations, emission_prob, a, sampleID, df, dist):
 
             for key in f_curr: 
                 f_curr[key]*=JumpFix   
+            #check for negative values
             
         fwd.append(f_curr)
         f_prev = f_curr

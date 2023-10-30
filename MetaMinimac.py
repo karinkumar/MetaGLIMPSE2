@@ -30,7 +30,7 @@ def calcNumFlips(lda):
 def emission_prob(hidden, obs, m, sampleID, npa):
     '''Hidden is Afr 1, Eur 2. Always using 0th haplotype. 
     '''
-    #print(obs)
+    #print(hidden)
     d = npa[hidden - 1][0][sampleID][m] + 1e-5
    
     GL0, GL1 = obs

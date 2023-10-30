@@ -16,7 +16,7 @@
 # %%
 import numpy as np
 import pandas as pd
-
+#epsilon = 1e-5
 
 # %% [raw]
 # #Hidden states
@@ -79,10 +79,6 @@ def transition_prob(from_state, to_state, lda, m):
 # #np.sum(lda[9144])
 
 # %% [raw]
-# def unphred(GL):
-#     return pow(10., -GL/10.)
-
-# %% [raw]
 # unphred(float('inf'))
 # #test (off by a constant so it doesn't matter?)
 # unphred(100)/unphred(90), unphred(25)/unphred(15), unphred(10)/unphred(0)
@@ -104,10 +100,13 @@ def emission_prob(hidden, obs, m, sampleID, npa):
     #Nothing is "missing anymore" each marker has a dosage. Also GL cannot be "missing" just has a flat prior
     a,b = hidden
     #print(a[0]-1, a[1]-1, sampleID, m)
-    d_a = npa[a[0] - 1][a[1] - 1][sampleID][m] + 1e-5 #dosage for hidden ref haplotype a 
-    d_b = npa[b[0] - 1][b[1] - 1][sampleID][m] + 1e-5 #dosage for hidden ref haplotype b
+    d_a = npa[a[0] - 1][a[1] - 1][sampleID][m] #dosage for hidden ref haplotype a 
+    d_b = npa[b[0] - 1][b[1] - 1][sampleID][m]  #dosage for hidden ref haplotype b
   
-    return GL2 * d_a*d_b + GL1 * (d_a * (1 - d_b) + d_b * (1 - d_a)) + GL0* (1 - d_a) * (1 - d_b)
+   # d_a = np.clip(d_a, epsilon, 1 - epsilon) #clip to ensure no underflow issues
+   # d_b = np.clip(d_b, epsilon, 1 - epsilon)
+    
+    return GL2 * d_a*d_b + GL1 *(d_a * (1 - d_b) + d_b * (1 - d_a)) + GL0* (1 - d_a) * (1 - d_b)
 
 # %% [raw]
 # ad = np.load("230820_ASWallelicdosages_testcase.npy")
@@ -129,8 +128,8 @@ def emission_prob(hidden, obs, m, sampleID, npa):
 # for h in Hidden:
 #     print(h, emission_prob(h, gl[1997], 1997, 0, ad)) #all tests fine
 # #import time
-# #%timeit emission_prob(((1,1), (2,2)), (1,1,1), 1, 1, ad)
+# %timeit emission_prob(((1,1), (2,2)), (1,1,1), 1, 1, ad)
 #
-# #%load_ext line_profiler 2.41e-06 s
-# #%lprun -f transition_prob transition_prob(((1,1), (2,2)), ((1,1), (2,2)), dist_mat, 1)
-# #%lprun -f emission_prob emission_prob(((1,1), (2,2)), (1,1,1), 1, 1, ad)
+# %load_ext line_profiler 2.41e-06 s
+# %lprun -f transition_prob transition_prob(((1,1), (2,2)), ((1,1), (2,2)), dist_mat, 1)
+# %lprun -f emission_prob emission_prob(((1,1), (2,2)), (1,1,1), 1, 1, ad)

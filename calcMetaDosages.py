@@ -26,6 +26,7 @@ def calcMetaDosages(posteriors, sample, allelic_dosages):
     meta_dosages=list()
     for m in range(len(posteriors)): 
         panels = posteriors[m]
+        #print(min(panels), max(panels))
         meta_dosage=0
         for key, value in panels.items():
             a,b = key[0]
@@ -37,4 +38,27 @@ def calcMetaDosages(posteriors, sample, allelic_dosages):
     if min(np.round(np.array(meta_dosages),3))>= 0 and max(np.round(np.array(meta_dosages),3)) <= 2: 
         return(meta_dosages)
     else: 
+        print(min(np.round(np.array(meta_dosages),3)), max(np.round(np.array(meta_dosages),3)) )
         raise ValueError("Meta Dosages Not Between 0 and 2")
+
+# %% [raw]
+# posteriors = np.load("231016posteriors_test.npy", allow_pickle = True)
+# allelic_dosages = np.load("230813_ASWallelicdosages.npy", allow_pickle = True)
+
+# %% [raw]
+# sample = 8
+#
+# meta_dosages=list()
+# for m in [26499]: #range(len(pst)): 
+#     panels = posteriors[m]
+#     print(panels)
+#     meta_dosage=0
+#     for key, value in panels.items():
+#         a,b = key[0]
+#         c,d = key[1]
+#         meta_dosage += allelic_dosages[a-1][b-1][sample][m]*value + allelic_dosages[c-1][d-1][sample][m]*value
+#     meta_dosages.append(meta_dosage)
+#     meta_dosage=0 
+
+# %% [raw]
+# np.where(np.array(meta_dosages) < 0)

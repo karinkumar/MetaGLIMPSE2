@@ -17,9 +17,11 @@
 from ForwardProb import forward_prob
 from BackwardProb import backward_prob
 
+
+# %%
 def fwd_bwd(Hidden, T, obs, a, b, sampleID, df, dist): 
     fwd = forward_prob(Hidden,T, obs, b, a, sampleID, df, dist)
-    #print("fwd", fwd)
+    #print("fwd", fwd[2000:2020])
     bwd = backward_prob(Hidden,T, obs, a, b, sampleID, df, dist)
     #print("bwd", bwd)
     posterior = []
@@ -34,6 +36,43 @@ def fwd_bwd(Hidden, T, obs, a, b, sampleID, df, dist):
         #print(c)
         posterior.append({st: fwd[i][st] * bwd[i][st]/c for s,st in enumerate(Hidden)})
     return(posterior)
+
+# %% [raw]
+# def fwd_bwd(Hidden, T, obs, a, b, sampleID, df, dist):
+#     # Assuming forward_prob and backward_prob are predefined functions
+#     fwd = forward_prob(Hidden, T, obs, b, a, sampleID, df, dist)
+#     #print("fwd", fwd[2000:2020])
+#     bwd = backward_prob(Hidden, T, obs, a, b, sampleID, df, dist)
+#
+#     posterior = []
+#     unnorm = []
+#     for i in range(len(fwd)): #fwd and bwd have the same T 
+#         # Unnormalized values
+#         #print("lenfwd", len(fwd))
+#         unnorm.append({st: fwd[i][st] * bwd[i][st] for s, st in enumerate(Hidden)})
+#
+#         # Normalize
+#         c = sum(unnorm[i].values())
+#         
+#         # If no probability mass or normalization factor is zero, this may indicate an issue with the model or inputs.
+#         if c == 0:
+#             raise ValueError(f"Normalization factor is zero at time {i}, check your model and inputs.")
+#
+#         posterior_state = {st: fwd[i][st] * bwd[i][st]/c for s, st in enumerate(Hidden)}
+#         
+#         # Check if posterior probabilities are within the valid range.
+#         for state, prob in posterior_state.items():
+#             if not (0 <= prob <= 1):
+#                 error_msg = (
+#                     f"Invalid probability for state {state} at time {i}: {prob}. "
+#                     f"fwd: {fwd[i][state]}, bwd: {bwd[i][state]}, posterior: {prob}"
+#                 )
+#                 raise ValueError(error_msg)
+#         
+#         posterior.append(posterior_state)
+#
+#     return posterior
+
 
 # %% [raw]
 # #test function
