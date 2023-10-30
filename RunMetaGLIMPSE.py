@@ -16,14 +16,17 @@
 # %%
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument("--afrvcf", required=True)
-parser.add_argument("--eurvcf", required = True)
-parser.add_argument("--glvcf", required = True)
+parser.add_argument("--afr", required=True)
+parser.add_argument("--eur", required = True)
+parser.add_argument("--gl", required = True)
+parser.add_argument("--out", required = True)
 parser.add_argument("--haploid", required = False, dest = 'haploid', action = 'store_true')
 parser.add_argument("--mixedstate", required = False, dest = 'mixedstate', action = 'store_false')
+parser.add_argument("--pickle", required = False, dest = 'pickle', action = 'store_true')
 args = parser.parse_args()
 parser.set_defaults(haploid=False)
 parser.set_defaults(mixedstate=True)
+parser.set_defaults(pickle=False)
 
 # %%
 haploid = args.haploid #False
@@ -65,22 +68,20 @@ def sample_map(sampleID):
 
 
 # %%
-GL = args.glvcf #"/net/fantasia/home/kiranhk/1kg30xEAS/genogvcfs1x.vcf.gz"
+GL = args.gl #"/net/fantasia/home/kiranhk/1kg30xEAS/genogvcfs1x.vcf.gz"
 
-DS_afr = args.afrvcf #"/net/fantasia/home/kiranhk/software/GLIMPSE2_for_kiran_kumar/GLIMPSE_ligate/AFR_EASdiploid_chr20_ligated.bcf"
+DS_afr = args.afr #"/net/fantasia/home/kiranhk/software/GLIMPSE2_for_kiran_kumar/GLIMPSE_ligate/AFR_EASdiploid_chr20_ligated.bcf"
 
-DS_eur = args.eurvcf #"/net/fantasia/home/kiranhk/software/GLIMPSE2_for_kiran_kumar/GLIMPSE_ligate/EUR_EASdiploid_chr20_ligated.bcf"
+DS_eur = args.eur #"/net/fantasia/home/kiranhk/software/GLIMPSE2_for_kiran_kumar/GLIMPSE_ligate/EUR_EASdiploid_chr20_ligated.bcf"
 
 print("Reading vcfs ...")
  #start timing
 start = time.time()
 SNPs, dicto, gl, ad = read_vcfs(GL, DS_afr, DS_eur)
 
-# %%
-np.save("allSNPschr20", SNPs) #for calcR2
-pickle.dump(dicto, open("EAS50dicto.p", "wb"))
-
-# %%
+# %% [raw]
+# np.save("allSNPschr20", SNPs) #for calcR2
+# pickle.dump(dicto, open("EAS50dicto.p", "wb"))
 
 # %%
 print("Checking vcfs...")
@@ -125,10 +126,11 @@ for sample in dicto.keys():
    
     
 print("writing out vcf...")
-#write_vcf(samples, SNPs, "231023EASmixedstates.vcf")
+write_vcf(samples, SNPs, args.out)
 end = time.time ()
 print("total time is", end - start)
-pickle.dump(samples, open('EASdiploidsamplesplainstates.p', 'wb')) #must use pickle to perserve dict
+if args.pickle:
+    pickle.dump(samples, open(args.out + '.p', 'wb')) #must use pickle to perserve dict
 
 
 # %% [raw]
