@@ -21,16 +21,16 @@ parser.add_argument("--eur", required = True)
 parser.add_argument("--gl", required = True)
 parser.add_argument("--out", required = True)
 parser.add_argument("--haploid", required = False, dest = 'haploid', action = 'store_true')
-parser.add_argument("--mixedstate", required = False, dest = 'mixedstate', action = 'store_false')
+parser.add_argument("--nomixedstate", required = False, dest = 'nomixedstate', action = 'store_true')
 parser.add_argument("--pickle", required = False, dest = 'pickle', action = 'store_true')
 args = parser.parse_args()
 parser.set_defaults(haploid=False)
-parser.set_defaults(mixedstate=True)
+parser.set_defaults(nomixedstate=False)
 parser.set_defaults(pickle=False)
 
 # %%
 haploid = args.haploid #False
-mixed_states = args.mixedstate #False
+mixed_states = not args.nomixedstate #False
 if haploid and mixed_states: #sanity check override user 
     raise ValueError("Cannot have mixed states for haploid data")
 print("mixed states are...", mixed_states)
