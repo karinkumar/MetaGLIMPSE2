@@ -14,6 +14,8 @@
 # ---
 
 # %%
+###command line interface###
+
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--afr", required=True)
@@ -27,13 +29,36 @@ args = parser.parse_args()
 parser.set_defaults(haploid=False)
 parser.set_defaults(nomixedstate=False)
 parser.set_defaults(pickle=False)
-
-# %%
+K=2 #count number of args
 haploid = args.haploid #False
 mixed_states = not args.nomixedstate #False
 if haploid and mixed_states: #sanity check override user 
     raise ValueError("Cannot have mixed states for haploid data")
 print("mixed states are...", mixed_states)
+
+GL = args.gl #"/net/fantasia/home/kiranhk/1kg30xEAS/genogvcfs1x.vcf.gz"
+
+DS_afr = args.afr #"/net/fantasia/home/kiranhk/software/GLIMPSE2_for_kiran_kumar/GLIMPSE_ligate/AFR_EASdiploid_chr20_ligated.bcf"
+
+DS_eur = args.eur #"/net/fantasia/home/kiranhk/software/GLIMPSE2_for_kiran_kumar/GLIMPSE_ligate/EUR_EASdiploid_chr20_ligated.bcf"
+
+# %% [raw]
+#
+
+# %% [raw]
+# ###run through notebook interface###
+# K=2 #number of hidden states
+# haploid = False
+# mixed_states = False
+# if haploid and mixed_states: #sanity check override user 
+#     raise ValueError("Cannot have mixed states for haploid data")
+# print("mixed states are...", mixed_states, "... with", K, "reference panels")
+#
+# GL ="/net/fantasia/home/kiranhk/1kg30xEUR/gl/bcftoolsgenogvcfs6x.vcf.gz"
+#
+# DS_afr = "/net/fantasia/home/kiranhk/software/GLIMPSE2_for_kiran_kumar/GLIMPSE_ligate/EUREURAdiploid_6xchr20.vcf.gz"
+#
+# DS_eur = "/net/fantasia/home/kiranhk/software/GLIMPSE2_for_kiran_kumar/GLIMPSE_ligate/EUREURBdiploid_6xchr20.vcf.gz"
 
 # %%
 import pickle
@@ -53,35 +78,17 @@ if haploid:
 else: 
     from calcDistMat import extract_int, calcLambda, calcNumFlips
 from IO import write_vcf, ds_gt_map, read_vcfs
-#Hidden states
-if not mixed_states and not haploid: 
-    Hidden = (((1,1), (1,2)), ((2,1), (2,2)))
-elif haploid and not mixed_states: 
-    Hidden = (1, 2)
-else: 
-    Hidden = (((1,1), (1,2)), ((2,1), (2,2)), ((1,1), (2,1)), ((1,1), (2,2)), ((1,2),(2,1)), ((1,2),(2,2)))
-    
-#Afr1, Afr2... Eur1, Eur2.. Afr1, Eur1..Afr1, Eur2..Afr2, Eur1..Afr2, Eur2, Afr2
-    
+from HiddenStates import generate_hidden
+Hidden = generate_hidden(K, mixed_states, haploid)    
 def sample_map(sampleID):
     return(dicto[sampleID] - 1) #index starts at 0
 
 
 # %%
-GL = args.gl #"/net/fantasia/home/kiranhk/1kg30xEAS/genogvcfs1x.vcf.gz"
-
-DS_afr = args.afr #"/net/fantasia/home/kiranhk/software/GLIMPSE2_for_kiran_kumar/GLIMPSE_ligate/AFR_EASdiploid_chr20_ligated.bcf"
-
-DS_eur = args.eur #"/net/fantasia/home/kiranhk/software/GLIMPSE2_for_kiran_kumar/GLIMPSE_ligate/EUR_EASdiploid_chr20_ligated.bcf"
-
 print("Reading vcfs ...")
  #start timing
 start = time.time()
-SNPs, dicto, gl, ad = read_vcfs(GL, DS_afr, DS_eur)
-
-# %% [raw]
-# np.save("allSNPschr20", SNPs) #for calcR2
-# pickle.dump(dicto, open("EAS50dicto.p", "wb"))
+SNPs, dicto, gl, ad, all_dosage = read_vcfs(GL, DS_afr, DS_eur)
 
 # %%
 print("Checking vcfs...")
@@ -108,9 +115,9 @@ for sample in dicto.keys():
         print("Chunk size is...", max(c)-min(c))
     #subset data structures
         og_transformed = gl[min(c):max(c)][sample]
-        #print(og_transformed)
         adc = ad[:, :, :, min(c):max(c)]
         ldac = lda[min(c):max(c),:]
+ 
 
     #calculate posteriors
         # #%timeit 
@@ -124,6 +131,27 @@ for sample in dicto.keys():
     samples[sample] = list(chain.from_iterable(mdosages))
     #weights[sample] = list(chain.from_iterable(weightsc))
    
+
+
+# %% [raw]
+# #plot weights
+# df = pd.DataFrame(weights["HG00121"])
+# #df.index = SNPs
+# df.columns = 'EURA', 'EURB'
+# df.describe()
+#
+# import matplotlib.pyplot as plt
+# plt.plot(df.index, df['EURA'], label='EURA')
+# plt.plot(df.index, df['EURB'], label='EURB')
+#
+# plt.xlabel('Index')
+# plt.ylabel('Values')
+# plt.title('Weights across Markers for Eur Target Sample HG00121')
+# plt.legend()
+#
+# plt.show()
+
+# %%
     
 print("writing out vcf...")
 write_vcf(samples, SNPs, args.out)
