@@ -21,8 +21,8 @@ import math
 import time
 import pandas as pd
 r=2e-7 #recombination
-K=2 #number of reference panels to be combined
-H=math.comb(K*2, 2) #number of hidden states
+#K=2 #number of reference panels to be combined
+#H=math.comb(K*2, 2) #number of hidden states
 #H=2
 RECOM_MIN=1e-04
 
@@ -48,7 +48,7 @@ def calcLambda(SNPs):
 
 
 # %%
-def calcNumFlips(lda):
+def calcNumFlips(lda, H):
     #print(H)
     arr = np.zeros((lda.size, 3))
     arr[:,0] = (1 - lda)**2 + (2*(lda - lda**2))/H + lda**2/(H**2) #numflips is 0

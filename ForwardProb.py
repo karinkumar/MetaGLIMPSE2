@@ -33,7 +33,7 @@ def forward_prob(Hidden, T, observations, emission_prob, a, sampleID, df, dist):
         f_curr = {} #dictionary
         for s, names in enumerate(Hidden):
             b = emission_prob(names, observations[t], t, sampleID, df) #emission_prob(hidden, obs, m, sampleID):
-           # print("emission", "state:", s, "marker:", t, b)
+            #print("emission", "state:", s, "marker:", t, b)
             if t==0: 
                 sum_prev = 1 #base case flat prior
             else: 

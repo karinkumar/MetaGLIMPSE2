@@ -16,35 +16,19 @@
 # %%
 import numpy as np
 import pandas as pd
-#epsilon = 1e-5
 
-# %% [raw]
-# #Hidden states
-# Hidden = (((1,1), (1,2)), ((2,1), (2,2)), ((1,1), (2,1)), ((1,1), (2,2)), ((1,2),(2,1)), ((1,2),(2,2)))
-# #Afr1, Afr2... Eur1, Eur2.. Afr1, Eur1..Afr1, Eur2..Afr2, Eur1..Afr2, Eur2, Afr2
-#
-# num_flips_tbl = np.zeros((len(Hidden), len(Hidden))) - 8
-# for num, state in enumerate(Hidden):
-#    # print(num == Hidden.index(state))
-#     a,b = state
-#     for num_, state_ in enumerate(Hidden): 
-#         c,d = state_ #matrix of from to pairs --> num flips
-#         num_flips_tbl[num, num_] = 2 - (int(a==c or a==d) + int(b==d or b==c))
-# num_flips_tbl
-# nfpd = pd.DataFrame(num_flips_tbl, index=Hidden, columns=Hidden)
 
 # %% [raw]
 # #test num_flips regardless of order this should work
 #
-# from_state = ((1,1),(1,2))
+# from_state = ((3,1),(1,2))
 # a,b = from_state
 # a
 # b
-# to_state = ((1,2), (1,1))
+# to_state = ((3,1), (3,2))
 # c,d = to_state
 #
 # 2 - (int(a==c or a==d) + int(b==d or b==c))
-#
 
 # %%
 def transition_prob(from_state, to_state, lda, m): 
@@ -55,8 +39,6 @@ def transition_prob(from_state, to_state, lda, m):
     a,b = from_state
     c,d = to_state
     num_flips = 2 - (int(a==c or a==d) + int(b==d or b==c))
-    #print(num_flips)
-    #print(lda[m, num_flips])
     return(lda[m, num_flips])
     
 
@@ -78,35 +60,22 @@ def transition_prob(from_state, to_state, lda, m):
 # #np.where(np.isclose(np.sum(lda, axis = 1),1, atol = 0.01)==False)
 # #np.sum(lda[9144])
 
-# %% [raw]
-# unphred(float('inf'))
-# #test (off by a constant so it doesn't matter?)
-# unphred(100)/unphred(90), unphred(25)/unphred(15), unphred(10)/unphred(0)
-
 # %%
 def emission_prob(hidden, obs, m, sampleID, npa):
     '''INPUT: dosage numpy array (npa), observed genotype: 0, 1, 2, 3(missing), hidden state = ((1,1),(1,1)), sampleID, dosages data frame
         RETURNS: emission probability 
     '''
-    #make sure obs is a tuple: #computationallly expensive? only use for debugging
-    #if not isinstance(obs, tuple): 
-     #   raise TypeError("Obs not Tuple at", m)
-    #elif len(obs)!= 3:
-     #   raise ValueError("Obs must be Tuple of Length 3 at", m)
 
     GL0, GL1, GL2 = obs #unpack
-   # print(GL1)
-    #No only missing genotype likleihood. We are only combining inputation sets.
-    #Nothing is "missing anymore" each marker has a dosage. Also GL cannot be "missing" just has a flat prior
+    #Also GL cannot be "missing" just has a flat prior
     a,b = hidden
-    #print(a[0]-1, a[1]-1, sampleID, m)
     d_a = npa[a[0] - 1][a[1] - 1][sampleID][m] #dosage for hidden ref haplotype a 
     d_b = npa[b[0] - 1][b[1] - 1][sampleID][m]  #dosage for hidden ref haplotype b
-  
-   # d_a = np.clip(d_a, epsilon, 1 - epsilon) #clip to ensure no underflow issues
-   # d_b = np.clip(d_b, epsilon, 1 - epsilon)
+    #print("d_a", d_a, "d_b", d_b, "GL0", GL0, "GL1", GL1, "GL2", GL2)
+
+    return GL2 * (d_a*d_b) + GL1 *(d_a * (1 - d_b) + d_b * (1 - d_a)) + GL0* ((1 - d_a) * (1 - d_b))
     
-    return GL2 * d_a*d_b + GL1 *(d_a * (1 - d_b) + d_b * (1 - d_a)) + GL0* (1 - d_a) * (1 - d_b)
+    #return 1 
 
 # %% [raw]
 # ad = np.load("230820_ASWallelicdosages_testcase.npy")

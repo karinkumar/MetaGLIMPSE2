@@ -18,18 +18,17 @@
 
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument("--afr", required=True)
-parser.add_argument("--eur", required = True)
+parser.add_argument("--dosages", required=True, nargs ='+', help = "Specify one or more imputed files")
 parser.add_argument("--gl", required = True)
 parser.add_argument("--out", required = True)
 parser.add_argument("--haploid", required = False, dest = 'haploid', action = 'store_true')
 parser.add_argument("--nomixedstate", required = False, dest = 'nomixedstate', action = 'store_true')
 parser.add_argument("--pickle", required = False, dest = 'pickle', action = 'store_true')
+parser.add_argument("--inner", required = False, dest = 'outer', action= 'store_false')
 args = parser.parse_args()
 parser.set_defaults(haploid=False)
 parser.set_defaults(nomixedstate=False)
 parser.set_defaults(pickle=False)
-K=2 #count number of args
 haploid = args.haploid #False
 mixed_states = not args.nomixedstate #False
 if haploid and mixed_states: #sanity check override user 
@@ -38,27 +37,14 @@ print("mixed states are...", mixed_states)
 
 GL = args.gl #"/net/fantasia/home/kiranhk/1kg30xEAS/genogvcfs1x.vcf.gz"
 
-DS_afr = args.afr #"/net/fantasia/home/kiranhk/software/GLIMPSE2_for_kiran_kumar/GLIMPSE_ligate/AFR_EASdiploid_chr20_ligated.bcf"
+DS_list = args.dosages
+K=len(DS_list)
+if K < 2 or K > 6: 
+    raise ValueError("Must have 2 reference panels to meta impute and cannot meta impute more than 6 panels")
 
-DS_eur = args.eur #"/net/fantasia/home/kiranhk/software/GLIMPSE2_for_kiran_kumar/GLIMPSE_ligate/EUR_EASdiploid_chr20_ligated.bcf"
+#DS_afr = args.afr "/net/fantasia/home/kiranhk/software/GLIMPSE2_for_kiran_kumar/GLIMPSE_ligate/AFR_EASdiploid_chr20_ligated.bcf"
 
-# %% [raw]
-#
-
-# %% [raw]
-# ###run through notebook interface###
-# K=2 #number of hidden states
-# haploid = False
-# mixed_states = False
-# if haploid and mixed_states: #sanity check override user 
-#     raise ValueError("Cannot have mixed states for haploid data")
-# print("mixed states are...", mixed_states, "... with", K, "reference panels")
-#
-# GL ="/net/fantasia/home/kiranhk/1kg30xEUR/gl/bcftoolsgenogvcfs6x.vcf.gz"
-#
-# DS_afr = "/net/fantasia/home/kiranhk/software/GLIMPSE2_for_kiran_kumar/GLIMPSE_ligate/EUREURAdiploid_6xchr20.vcf.gz"
-#
-# DS_eur = "/net/fantasia/home/kiranhk/software/GLIMPSE2_for_kiran_kumar/GLIMPSE_ligate/EUREURBdiploid_6xchr20.vcf.gz"
+#DS_eur = args.eur #"/net/fantasia/home/kiranhk/software/GLIMPSE2_for_kiran_kumar/GLIMPSE_ligate/EUR_EASdiploid_chr20_ligated.bcf"
 
 # %%
 import pickle
@@ -77,7 +63,7 @@ if haploid:
     from calcDistMat import extract_int, calcLambda
 else: 
     from calcDistMat import extract_int, calcLambda, calcNumFlips
-from IO import write_vcf, ds_gt_map, read_vcfs
+from IO import write_vcf, ds_gt_map, read_vcfs_genK
 from HiddenStates import generate_hidden
 Hidden = generate_hidden(K, mixed_states, haploid)    
 def sample_map(sampleID):
@@ -88,11 +74,11 @@ def sample_map(sampleID):
 print("Reading vcfs ...")
  #start timing
 start = time.time()
-SNPs, dicto, gl, ad, all_dosage = read_vcfs(GL, DS_afr, DS_eur)
+SNPs, dicto, gl, ad = read_vcfs_genK(GL, *DS_list, outer = args.outer)
 
 # %%
 print("Checking vcfs...")
-assert ad.size/(2*2*len(dicto)) == len(gl) == len(SNPs) #check file size is consistent indicating markers are lined up
+assert ad.size/(K*2*len(dicto)) == len(gl) == len(SNPs) #check file size is consistent indicating markers are lined up
 assert len(np.unique(SNPs))==len(SNPs) #check SNPs are unique
 assert len(dicto) == gl.shape[1] #check sample names are equivalent
 
@@ -103,13 +89,13 @@ print("Number of Chunks is ..", len(chunks))
 
 # %%
 samples = {}
-#weights = {}
+weights = {}
 
-lda = calcNumFlips(calcLambda(SNPs)) #do this once and then subset
+lda = calcNumFlips(calcLambda(SNPs), len(Hidden)) #do this once and then subset
 
 for sample in dicto.keys(): 
     mdosages = []
-    #weightsc = []
+    weightsc = []
     for c in chunks:
         print("Meta Imputing sample ...", sample, "from", gl.iloc[min(c),:].name, "to", gl.iloc[max(c) - 1,:].name)
         print("Chunk size is...", max(c)-min(c))
@@ -126,69 +112,20 @@ for sample in dicto.keys():
     #calculate meta dosages
         #np.save("231016posteriors_test", pst)
         mdosages.append(calcMetaDosages(pst, sample_map(sample), adc))
-        #weightsc.append(pst)
+        weightsc.append(pst)
     #add to samples
     samples[sample] = list(chain.from_iterable(mdosages))
-    #weights[sample] = list(chain.from_iterable(weightsc))
+    weights[sample] = list(chain.from_iterable(weightsc))
    
 
 
-# %% [raw]
-# #plot weights
-# df = pd.DataFrame(weights["HG00121"])
-# #df.index = SNPs
-# df.columns = 'EURA', 'EURB'
-# df.describe()
-#
-# import matplotlib.pyplot as plt
-# plt.plot(df.index, df['EURA'], label='EURA')
-# plt.plot(df.index, df['EURB'], label='EURB')
-#
-# plt.xlabel('Index')
-# plt.ylabel('Values')
-# plt.title('Weights across Markers for Eur Target Sample HG00121')
-# plt.legend()
-#
-# plt.show()
-
 # %%
-    
+if args.pickle: #must use pickle to perserve dict
+    #pickle.dump(samples, open(args.out + '.p', 'wb')) #in case write_vcf fails 
+    pickle.dump(weights, open(args.out + "weights" + '.p', 'wb'))
 print("writing out vcf...")
 write_vcf(samples, SNPs, args.out)
 end = time.time ()
 print("total time is", end - start)
-if args.pickle:
-    pickle.dump(samples, open(args.out + '.p', 'wb')) #must use pickle to perserve dict
 
 
-# %% [raw]
-# %run loadData.ipynb
-# #GL data path to file.. 
-#  
-# GL_path = "/net/fantasia/home/kiranhk/HMM/hapASWGL.csv"
-# #"ASWHaplotype0.csv"
-# #"ASWGL.csv" 30x
-# #"ASWGT_testcase.csv"
-# #"/net/fantasia/home/kiranhk/HMM/GL.csv"
-#
-# #Allelic Dosages path to file...
-#   
-# AD_path = "/net/fantasia/home/kiranhk/HMM/230918_haploid_ASWallelicdosages.npy"
-#
-# #230923_haploid_EASallelicdosages.npy" #EAS 30x
-# #"230820_ASWallelicdosages_testcase.npy"
-# #"230813_ASWallelicdosages.npy" #ASW 30x 
-# #"/net/fantasia/home/kiranhk/HMM/230721_allelicdosages.npy" #aDNA
-#
-#
-# SNP_path = "230913ASWSNPs.npy" #also the same for EAS
-#
-# #"/net/fantasia/home/kiranhk/HMM/230726SNPs.npy"
-#
-# ad = np.load(AD_path)
-# gl = pd.read_pickle(GL_path)
-# #dist_mat = np.load(dist_path)
-# #remove semi-colons
-# #SNPs = 'chr' + gl.index
-# SNPs = np.load(SNP_path, allow_pickle = True)
-# dicto = pickle.load(open('dicto.p', 'rb'))
