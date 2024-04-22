@@ -7,3 +7,12 @@ This method takes the results from two or more single panel GLIMPSE2 imputations
 The output of this method is a vcf file at the union set of markers in each input file with the estimated genotype dosage for each sample and marker.
 
 We have shown this method is better than the best single panel imputation in the cases where imputation with the mega panel is better than the other single panel imputations (which is most cases). See pre-print for more information: 
+
+***Installation***
+
+
+***Example***
+
+See the example files and run the following code once you have ins
+
+To run GLIMPSE2 please check out the GLIMPSE tutorial (...). 
