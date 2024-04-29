@@ -38,10 +38,10 @@ def calcLambda(SNPs):
     #SNPs = SNPs[min(chunk):max(chunk)]
     extract_int_vec = np.frompyfunc(extract_int, 1, 1)
     points = np.array(extract_int_vec(SNPs), dtype=int)
-    points = np.append(0, points)
+    #points = np.append(0, points)
     #diffs = np.append(1e-6, np.diff(points))
     diffs = np.diff(points)
-    #print(diffs[0:10])
+    #print(diffs[0:20])
     #return(diffs)
     return(np.maximum(1 - np.exp(-r*diffs), np.array(RECOM_MIN))) #r/H before
 
@@ -68,10 +68,12 @@ def calcNumFlips(lda, H):
 # assert np.all((np.maximum(1 - np.exp(-r*diffs), RECOM_MIN) == RECOM_MIN)[idx]) == True
 
 # %% [raw]
-# SNPs = np.load("/net/fantasia/home/kiranhk/HMM/230726SNPs.npy", allow_pickle = True)
-# lda_truth = np.load("testlda.npy")
+# SNPs = np.load("/net/fantasia/home/kiranhk/HMM/2301107allASWtestSNPs.npy", allow_pickle = True)
+# #lda_truth = np.load("testlda.npy")
 # print(len(SNPs))
 #
 # lda_test = calcLambda(SNPs)
 #
-# np.save("2308093dlda", calcNumFlips(lda_test))
+# #np.save("2308093dlda", calcNumFlips(lda_test))
+#
+# len(lda_test)

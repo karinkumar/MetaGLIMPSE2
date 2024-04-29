@@ -36,10 +36,11 @@ def transition_prob(from_state, to_state, lda, m):
     Input the to/fro hidden states (each a tuple) e.g. ((1,1),(1,2)) is Ref1Allel1,Ref1Allele2 the distance matrix, and marker (i.e time T along the HMM)
     Ouput transition probability
    '''
+    #print(m)
     a,b = from_state
     c,d = to_state
     num_flips = 2 - (int(a==c or a==d) + int(b==d or b==c))
-    return(lda[m, num_flips])
+    return(lda[m - 1, num_flips])
     
 
 

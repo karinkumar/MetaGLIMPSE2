@@ -24,7 +24,8 @@ parser.add_argument("--out", required = True)
 parser.add_argument("--haploid", required = False, dest = 'haploid', action = 'store_true')
 parser.add_argument("--nomixedstate", required = False, dest = 'nomixedstate', action = 'store_true')
 parser.add_argument("--pickle", required = False, dest = 'pickle', action = 'store_true')
-parser.add_argument("--inner", required = False, dest = 'outer', action= 'store_false')
+#parser.add_argument("--inner", required = False, dest = 'outer', action= 'store_false')
+parser.add_argument("--chunk_size", required = False, dest = 'L')
 args = parser.parse_args()
 parser.set_defaults(haploid=False)
 parser.set_defaults(nomixedstate=False)
@@ -63,7 +64,7 @@ if haploid:
     from calcDistMat import extract_int, calcLambda
 else: 
     from calcDistMat import extract_int, calcLambda, calcNumFlips
-from IO import write_vcf, ds_gt_map, read_vcfs_genK
+from IO import write_vcf, ds_gt_map, read_vcfs_genK_region, check_sample_names, get_region_list
 from HiddenStates import generate_hidden
 Hidden = generate_hidden(K, mixed_states, haploid)    
 def sample_map(sampleID):
@@ -71,61 +72,42 @@ def sample_map(sampleID):
 
 
 # %%
-print("Reading vcfs ...")
- #start timing
-start = time.time()
-SNPs, dicto, gl, ad = read_vcfs_genK(GL, *DS_list, outer = args.outer)
-
-# %%
 print("Checking vcfs...")
-assert ad.size/(K*2*len(dicto)) == len(gl) == len(SNPs) #check file size is consistent indicating markers are lined up
-assert len(np.unique(SNPs))==len(SNPs) #check SNPs are unique
-assert len(dicto) == gl.shape[1] #check sample names are equivalent
-
-M=len(SNPs); L=30000
-chunks = [np.arange(0+L*k,min(L*(k+1) + 1, M + 1)) for k in range(0, M//L + 1)]
-print("Number of Chunks is ..", len(chunks))
-#chunks
+assert check_sample_names(GL, *DS_list)
+print("Passed checks .. Chunking vcfs ...")
+L=30000
+regions = get_region_list(*DS_list, chunk_size = L)
 
 # %%
-samples = {}
-weights = {}
+start = time.time()
+for num, r in enumerate(regions):
+    SNPs, dicto, gl, ad = read_vcfs_genK_region(GL, *DS_list, region = r, outer = True) 
+    assert ad.size/(K*2*len(dicto)) == len(gl) == len(SNPs) #check file size is consistent indicating markers are lined up
+    assert len(np.unique(SNPs))==len(SNPs) #check SNPs are unique
+    assert len(dicto) == gl.shape[1] #check sample names are equivalent
 
-lda = calcNumFlips(calcLambda(SNPs), len(Hidden)) #do this once and then subset
+    samples = {}
 
-for sample in dicto.keys(): 
-    mdosages = []
-    weightsc = []
-    for c in chunks:
-        print("Meta Imputing sample ...", sample, "from", gl.iloc[min(c),:].name, "to", gl.iloc[max(c) - 1,:].name)
-        print("Chunk size is...", max(c)-min(c))
+
+    lda = calcNumFlips(calcLambda(SNPs), len(Hidden)) #do this once and then subset
+
+    for sample in dicto.keys(): 
+        mdosages = []
+        print("Meta Imputing sample ...", sample, "in region", r)
     #subset data structures
-        og_transformed = gl[min(c):max(c)][sample]
-        adc = ad[:, :, :, min(c):max(c)]
-        ldac = lda[min(c):max(c),:]
- 
+        og_transformed = gl[sample]
 
     #calculate posteriors
         # #%timeit 
-        pst = fwd_bwd(Hidden, og_transformed.size, list(og_transformed), transition_prob, emission_prob, sample_map(sample), adc, ldac)
+        pst = fwd_bwd(Hidden, og_transformed.size, list(og_transformed), transition_prob, emission_prob, sample_map(sample), ad, lda)
     #cProfile.run('pst = fwd_bwd(Hidden, og_transformed.size, list(og_transformed), transition_prob, emission_prob, sample_map(sample), adc, ldac)')
     #calculate meta dosages
-        #np.save("231016posteriors_test", pst)
-        mdosages.append(calcMetaDosages(pst, sample_map(sample), adc))
-        weightsc.append(pst)
+        mdosages.append(calcMetaDosages(pst, sample_map(sample), ad))
+     
     #add to samples
-    samples[sample] = list(chain.from_iterable(mdosages))
-    weights[sample] = list(chain.from_iterable(weightsc))
-   
+        samples[sample] = list(chain.from_iterable(mdosages))
 
+    write_vcf(samples, SNPs, args.out + str(num))
 
-# %%
-if args.pickle: #must use pickle to perserve dict
-    #pickle.dump(samples, open(args.out + '.p', 'wb')) #in case write_vcf fails 
-    pickle.dump(weights, open(args.out + "weights" + '.p', 'wb'))
-print("writing out vcf...")
-write_vcf(samples, SNPs, args.out)
 end = time.time ()
 print("total time is", end - start)
-
-

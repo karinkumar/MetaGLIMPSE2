@@ -34,17 +34,17 @@ def forward_prob(Hidden, T, observations, emission_prob, a, sampleID, df, dist):
         for s, names in enumerate(Hidden):
             b = emission_prob(names, observations[t], t, sampleID, df) #emission_prob(hidden, obs, m, sampleID):
             #print("emission", "state:", s, "marker:", t, b)
-            if t==0: 
+            if t==0:
                 sum_prev = 1 #base case flat prior
             else: 
                 #for s_, names_ in enumerate(Hidden):
-                 #   print("transition", "from", names_, "to:", names, "marker", t, a(names_,names, dist,t))
+                    #print("transition", "from", names_, "to:", names, "marker", t, a(names_,names, dist,t))
                 sum_prev = sum(f_prev[names_]*a(names_,names, dist,t) for s_, names_ in enumerate(Hidden))
 
             f_curr[names] = sum_prev*b
             #if f_curr[names] < 0: 
              #   raise ValueError("fwd prob is negative at", t, "emission_prob", b, "sum_prev", sum_prev, "state", names)
-            
+            #print("fwd at state", names, f_curr[names], "previous alpha/base case*transition", sum_prev, "emissions", b)
         #check for underflow issues
         #print(f_curr[list(f_curr.keys())[0]])
         if f_curr[list(f_curr.keys())[0]] < JumpThreshold: #check first hidden state only
