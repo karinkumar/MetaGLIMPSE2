@@ -18,7 +18,7 @@ Once installed, the main file is RunMetaGLIMPSE.py. The following options are re
 
 -- dosages:  paths of imputed genotypes vcf files (output from GLIMPSE2), 
 
--- gl:  vcf file with genotype likelihoods for each position in the union set of markers of the dosage files, 
+-- gl:  vcf file with genotype likelihoods for each position in the _union_ set of markers of the dosage files, 
 
 -- out:  prefix of outfiles. 
 
