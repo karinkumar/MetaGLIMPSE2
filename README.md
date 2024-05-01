@@ -16,20 +16,27 @@ git clone https://github.com/karinkumar/MetaGLIMPSE2.git
 Once installed, the main file is RunMetaGLIMPSE.py. The following options are required:
 
 
--- dosages paths of imputed genotypes vcf files (output from GLIMPSE2), 
+-- dosages:  paths of imputed genotypes vcf files (output from GLIMPSE2), 
 
---gl vcf file with genotype likelihoods for each position in the union set of markers of the dosage files, 
+-- gl:  vcf file with genotype likelihoods for each position in the union set of markers of the dosage files, 
 
--- out prefix of outfiles. 
+-- out:  prefix of outfiles. 
 
-***2. Run Example ***
+***2. Run Example***
 
 See the example files and run the following code once you have installed the program.
 
 To run GLIMPSE2 please check out the GLIMPSE tutorial https://odelaneau.github.io/GLIMPSE/ 
 
-***3 Ligate *** 
+***3 Ligate*** 
 
 MetaGLIMPSE2 produces meta-imputed chunks. In order to be turned into one vcf file for an entire chromosome, they need to be ligated used bcftools. The following code ligates the chunks in the example. 
+
+ls -v out*.vcf.gz > list.txt
+
+bcftools concat -f list.txt -Oz -o fullchrom.vcf.gz
+
+bcftools index fullchrom.vcf.gz
+
 
 
