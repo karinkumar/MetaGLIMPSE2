@@ -11,8 +11,14 @@ We have shown this method is better than the best single panel imputation in the
 
 ***Installation***
 
-git clone ... 
-The main file is RunMetaGLIMPSE.py. The following options are required: -- dosages paths of imputed genotypes vcf files (output from GLIMPSE2), --gl vcf file with genotype likelihoods for each position in the union set of markers of the dosage files, -- out prefix of outfiles. 
+git clone https://github.com/karinkumar/MetaGLIMPSE2.git
+
+The main file is RunMetaGLIMPSE.py. The following options are required:
+-- dosages paths of imputed genotypes vcf files (output from GLIMPSE2), 
+
+--gl vcf file with genotype likelihoods for each position in the union set of markers of the dosage files, 
+
+-- out prefix of outfiles. 
 
 ***Example***
 
