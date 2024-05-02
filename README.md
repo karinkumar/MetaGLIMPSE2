@@ -26,9 +26,9 @@ Once you enter the MetaGLIMPSE2 folder, the executable is RunMetaGLIMPSE.py. The
 
 ***2. Run Example***
 
-See the example folder for 1000 Genomes downsampled to 2x files and run the following code once you have installed the program and also have access to python. 
+See the example folder for African American input files derived from 1000 Genomes and downsampled to 1x and run the following code once you have installed the program and also have access to python. 
 
-python3.8 RunMetaGLIMPSE.py -- dosages -- gl 
+python3.8 RunMetaGLIMPSE.py -- dosages ASWbcftoolsEURdiploid_1xchr20.vcf.gz ASWbcftoolsAFRdiploid_1xchr20.vcf.gz -gl bcftoolsgenogvcfs1x.vcf.gz --out ASWchr20
 
 To run GLIMPSE2 please check out the GLIMPSE tutorial https://odelaneau.github.io/GLIMPSE/ 
 
@@ -36,11 +36,11 @@ To run GLIMPSE2 please check out the GLIMPSE tutorial https://odelaneau.github.i
 
 MetaGLIMPSE2 produces meta-imputed chunks. In order to be turned into one vcf file for an entire chromosome, they need to be ligated used bcftools. The following code ligates the chunks in the example. 
 
-ls -v out*.vcf.gz > list.txt
+ls -v ASWchr20*.vcf.gz > list.txt
 
-bcftools concat -f list.txt -Oz -o fullchrom.vcf.gz
+bcftools concat -f list.txt -Oz -o fullASWchr20.vcf.gz
 
-bcftools index fullchrom.vcf.gz
+bcftools index fullASWchr20.vcf.gz
 
 
 
