@@ -13,7 +13,9 @@ We have shown this method is better than the best single panel imputation in the
 
 git clone https://github.com/karinkumar/MetaGLIMPSE2.git
 
-Once installed, the main file is RunMetaGLIMPSE.py. The following options are required:
+cd MetaGLIMPSE2/
+
+Once you enter the MetaGLIMPSE2 folder, the executable is RunMetaGLIMPSE.py. The following options are required:
 
 
 -- dosages:  paths of imputed genotypes vcf files (output from GLIMPSE2), 
@@ -24,7 +26,9 @@ Once installed, the main file is RunMetaGLIMPSE.py. The following options are re
 
 ***2. Run Example***
 
-See the example files and run the following code once you have installed the program.
+See the example folder for 1000 Genomes downsampled to 2x files and run the following code once you have installed the program and also have access to python. 
+
+python3.8 RunMetaGLIMPSE.py -- dosages -- gl 
 
 To run GLIMPSE2 please check out the GLIMPSE tutorial https://odelaneau.github.io/GLIMPSE/ 
 
