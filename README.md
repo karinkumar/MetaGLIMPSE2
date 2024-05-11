@@ -1,4 +1,4 @@
-# MetaGLIMPSE2
+# MetaGLIMPSE
 Meta Imputation of Low Coverage Sequencing
 
 ***Overview***
