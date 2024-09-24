@@ -20,7 +20,7 @@ import numpy as np
 import math
 import time
 import pandas as pd
-r=2e-7 #recombination
+#r=2e-7 #recombination
 #K=2 #number of reference panels to be combined
 #H=math.comb(K*2, 2) #number of hidden states
 #H=2
@@ -33,7 +33,7 @@ def extract_int(s):
 
 
 # %%
-def calcLambda(SNPs):
+def calcLambda(SNPs, r):
     #points = [int(re.search(pattern, s).group(1)) for s in SNPs] 
     #SNPs = SNPs[min(chunk):max(chunk)]
     extract_int_vec = np.frompyfunc(extract_int, 1, 1)
@@ -43,7 +43,7 @@ def calcLambda(SNPs):
     diffs = np.diff(points)
     #print(diffs[0:20])
     #return(diffs)
-    return(np.maximum(1 - np.exp(-r*diffs), np.array(RECOM_MIN))) #r/H before
+    return(np.maximum(1 - np.exp(-r*diffs), np.array(RECOM_MIN)), diffs) #r/H before
 
 
 
